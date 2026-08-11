@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import org.springframework.http.HttpStatus;
 
+import ru.practicum.shareit.constants.ShareitConstants;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -31,14 +32,14 @@ public class ItemController {
     //Создание вещицы
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemDto create(@RequestHeader(ShareitConstants.XSharerID) Long userId,
                           @RequestBody ItemDto itemDto) {
         return itemService.create(userId, itemDto);
     }
 
     //обновление вещицы
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemDto update(@RequestHeader(ShareitConstants.XSharerID) Long userId,
                           @PathVariable Long itemId,
                           @RequestBody ItemDto itemDto) {
         return itemService.update(userId, itemId, itemDto);
@@ -52,7 +53,7 @@ public class ItemController {
 
     //Получение всех вещей
     @GetMapping
-    public List<ItemDto> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemDto> getAllByOwner(@RequestHeader(ShareitConstants.XSharerID) Long userId) {
         return itemService.getAllByOwner(userId);
     }
 
