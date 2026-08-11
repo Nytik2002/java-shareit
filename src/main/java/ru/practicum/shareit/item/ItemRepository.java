@@ -11,11 +11,13 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+//Репозиторий для хранения вещей
 @Repository
 public class ItemRepository {
-    private final Map<Long, Item> items = new HashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
+    private final Map<Long, Item> items = new HashMap<>();                  //Хранилище вещей
+    private final AtomicLong idGenerator = new AtomicLong(1);     //Генератор ID
 
+    //Сохранение или обновление вещицы
     public Item save(Item item) {
         if (item.getId() == null) {
             item.setId(idGenerator.getAndIncrement());
@@ -24,10 +26,12 @@ public class ItemRepository {
         return item;
     }
 
+    //Поиск вещицы по ID
     public Optional<Item> findById(Long id) {
         return Optional.ofNullable(items.get(id));
     }
 
+    //Получение всех вещей
     public List<Item> findAllByOwnerId(Long ownerId) {
         return items.values().stream()
                 .filter(item -> item.getOwner() != null &&
@@ -35,6 +39,7 @@ public class ItemRepository {
                 .collect(Collectors.toList());
     }
 
+    //Поиск вещей по тексту
     public List<Item> search(String text) {
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
@@ -49,6 +54,7 @@ public class ItemRepository {
                 .collect(Collectors.toList());
     }
 
+    //Обновление вещей
     public Item update(Item item) {
         if (!items.containsKey(item.getId())) {
             throw new RuntimeException("Item not found");
@@ -57,6 +63,7 @@ public class ItemRepository {
         return item;
     }
 
+    //Удаление вещи по ID
     public void deleteById(Long id) {
         items.remove(id);
     }

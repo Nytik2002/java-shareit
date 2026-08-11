@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
+//Обработчик ошибок
 @RestControllerAdvice
 public class ExceptionError {
 
+    //Обработка ошибок входных данных
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException e) {
         return ResponseEntity
@@ -19,6 +21,7 @@ public class ExceptionError {
                 .body(Map.of("error", "Validation failed"));
     }
 
+    //Обработка отсутствия заголовка
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<Map<String, String>> handleMissingHeader(MissingRequestHeaderException e) {
         return ResponseEntity
@@ -26,6 +29,7 @@ public class ExceptionError {
                 .body(Map.of("error", "Missing required header: " + e.getHeaderName()));
     }
 
+    //Обработка всех RuntimeException и определение статуса по тексту сообщения
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException e) {
         String message = e.getMessage();

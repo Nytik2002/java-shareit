@@ -4,6 +4,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
 public class ItemMapper {
+    //Преобразование Item в DTO
     public static ItemDto toItemDto(Item item) {
         return ItemDto.builder()
                 .id(item.getId())
@@ -14,7 +15,7 @@ public class ItemMapper {
                 .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
-
+    // Преобразование DTO в Item
     public static Item toItem(ItemDto itemDto) {
         return Item.builder()
                 .id(itemDto.getId())

@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//Реализация сервиса для работы с вещами
 @Service
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
@@ -23,8 +24,10 @@ public class ItemServiceImpl implements ItemService {
         this.userRepository = userRepository;
     }
 
+    //Создание вещицы
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
+        //Проверка обязательных полей
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
             throw new RuntimeException("Item name is required");
         }
@@ -35,6 +38,7 @@ public class ItemServiceImpl implements ItemService {
             throw new RuntimeException("Item available status is required");
         }
 
+        //Проверка на существования владельца
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -45,11 +49,13 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(savedItem);
     }
 
+    //Обновление вещицы
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
+        //Проверка что пользователь является владельцем
         if (!existingItem.getOwner().getId().equals(userId)) {
             throw new RuntimeException("Only owner can update item");
         }
@@ -68,6 +74,7 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(updatedItem);
     }
 
+    //Получение вещи по ID
     @Override
     public ItemDto getById(Long itemId) {
         Item item = itemRepository.findById(itemId)
@@ -75,6 +82,7 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(item);
     }
 
+    //Получение всех вещей
     @Override
     public List<ItemDto> getAllByOwner(Long userId) {
         return itemRepository.findAllByOwnerId(userId).stream()
@@ -82,6 +90,7 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
+    //Получение вещей по тексту
     @Override
     public List<ItemDto> search(String text) {
         if (text == null || text.isBlank()) {

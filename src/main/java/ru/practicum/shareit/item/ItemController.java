@@ -18,6 +18,7 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
 
+//Контроллер для обработки HTTP запросов
 @RestController
 @RequestMapping("/items")
 public class ItemController {
@@ -27,6 +28,7 @@ public class ItemController {
         this.itemService = itemService;
     }
 
+    //Создание вещицы
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
@@ -34,6 +36,7 @@ public class ItemController {
         return itemService.create(userId, itemDto);
     }
 
+    //обновление вещицы
     @PatchMapping("/{itemId}")
     public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @PathVariable Long itemId,
@@ -41,16 +44,19 @@ public class ItemController {
         return itemService.update(userId, itemId, itemDto);
     }
 
+    //Получение вещи по ID
     @GetMapping("/{itemId}")
     public ItemDto getById(@PathVariable Long itemId) {
         return itemService.getById(itemId);
     }
 
+    //Получение всех вещей
     @GetMapping
     public List<ItemDto> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.getAllByOwner(userId);
     }
 
+    //Получение вещей по тексту
     @GetMapping("/search")
     public List<ItemDto> search(@RequestParam String text) {
         return itemService.search(text);
