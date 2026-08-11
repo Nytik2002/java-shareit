@@ -19,6 +19,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto create(UserDto userDto) {
+        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+        if (userDto.getName() == null || userDto.getName().isBlank()) {
+            throw new RuntimeException("Name is required");
+        }
+
         User user = UserMapper.toUser(userDto);
         User savedUser = userRepository.save(user);
         return UserMapper.toUserDto(savedUser);

@@ -24,6 +24,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
+        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
+            throw new RuntimeException("Item name is required");
+        }
+        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
+            throw new RuntimeException("Item description is required");
+        }
+        if (itemDto.getAvailable() == null) {
+            throw new RuntimeException("Item available status is required");
+        }
+
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

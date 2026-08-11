@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.stereotype.Repository;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,16 +46,26 @@ public class UserRepository {
             throw new RuntimeException("User not found");
         }
 
-        if (user.getEmail() != null && !user.getEmail().equals(existingUser.getEmail())) {
-            if (emails.contains(user.getEmail())) {
+        String oldEmail = existingUser.getEmail();
+        String newEmail = user.getEmail();
+
+        if (newEmail != null && !newEmail.equals(oldEmail)) {
+            if (emails.contains(newEmail)) {
                 throw new RuntimeException("Email already exists");
             }
-            emails.remove(existingUser.getEmail());
-            emails.add(user.getEmail());
+            if (oldEmail != null) {
+                emails.remove(oldEmail);
+            }
+            emails.add(newEmail);
+            existingUser.setEmail(newEmail);
         }
 
-        users.put(user.getId(), user);
-        return user;
+        if (user.getName() != null) {
+            existingUser.setName(user.getName());
+        }
+
+        users.put(existingUser.getId(), existingUser);
+        return existingUser;
     }
 
     public void deleteById(Long id) {
