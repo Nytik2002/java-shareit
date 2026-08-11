@@ -33,6 +33,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto update(Long id, UserDto userDto) {
+        // Сначала проверяем уникальность email
+        if (userDto.getEmail() != null) {
+            userRepository.findAll().stream()
+                    .filter(u -> !u.getId().equals(id))
+                    .filter(u -> userDto.getEmail().equals(u.getEmail()))
+                    .findAny()
+                    .ifPresent(u -> {
+                        throw new RuntimeException("Email already exists");
+                    });
+        }
+
+        // Потом проверяем существование пользователя
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
