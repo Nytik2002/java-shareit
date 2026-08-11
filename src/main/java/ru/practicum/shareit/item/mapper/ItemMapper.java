@@ -15,6 +15,7 @@ public class ItemMapper {
                 .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
+
     // Преобразование DTO в Item
     public static Item toItem(ItemDto itemDto) {
         return Item.builder()
