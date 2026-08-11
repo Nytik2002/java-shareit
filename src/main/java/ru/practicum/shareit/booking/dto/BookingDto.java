@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingDto {
-    private Long id;                //Уникальный ID
-    private LocalDateTime start;    //Дата/время начала бронирования
-    private LocalDateTime end;      //Дата/время окончания бронирования
-    private Long itemId;            //ID вещицы, которую бронирую
-    private Long bookerId;          //ID пользователя, который бронируется
-    private String status;          //Статус бронирования
+    private Long id;
+    private LocalDateTime start;
+    private LocalDateTime end;
+    private Long itemId;
+    private Long bookerId;
+    private String status;
 }

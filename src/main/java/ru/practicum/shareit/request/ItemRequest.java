@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemRequest {
-    private Long id;                //Уникальный ID
-    private String description;     //Описание желаемой вещи
-    private User requestor;         //Пользователя создавший запрос
-    private LocalDateTime created;  //Дата/время когда было создан запроса
+    private Long id;
+    private String description;
+    private User requestor;
+    private LocalDateTime created;
 }

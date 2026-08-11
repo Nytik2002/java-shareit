@@ -13,10 +13,10 @@ import ru.practicum.shareit.user.User;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Item {
-    private Long id;                //Уникальный ID
-    private String name;            //Имя вещицы
-    private String description;     //Описание вещицы
-    private Boolean available;      //Доступность бронирования
-    private User owner;             //Владелец вещи
-    private ItemRequest request;    //Запрос
+    private Long id;
+    private String name;
+    private String description;
+    private Boolean available;
+    private User owner;
+    private ItemRequest request;
 }

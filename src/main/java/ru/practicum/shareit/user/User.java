@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    private Long id;        //Уникальный ID
-    private String name;    //Имя
-    private String email;   //Email
+    private Long id;
+    private String name;
+    private String email;
 }

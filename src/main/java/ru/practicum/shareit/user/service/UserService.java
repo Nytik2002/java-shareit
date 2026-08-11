@@ -6,13 +6,13 @@ import java.util.List;
 
 //Интерфейс для работы с пользователями
 public interface UserService {
-    UserDto create(UserDto userDto);            //Создание
+    UserDto create(UserDto userDto);
 
-    UserDto update(Long id, UserDto userDto);   //Обновление
+    UserDto update(Long id, UserDto userDto);
 
-    UserDto getById(Long id);                   //Получение ID
+    UserDto getById(Long id);
 
-    List<UserDto> getAll();                     //Получение всех в списке
+    List<UserDto> getAll();
 
-    void delete(Long id);                       //Удаление
+    void delete(Long id);
 }

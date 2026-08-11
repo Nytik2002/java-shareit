@@ -13,11 +13,11 @@ import jakarta.validation.constraints.Email;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
-    private Long id;        //Уникальный ID
+    private Long id;
 
     @NotBlank
-    private String name;    //Имя пользователя
+    private String name;
 
     @Email
-    private String email;   //Email пользователя
+    private String email;
 }
