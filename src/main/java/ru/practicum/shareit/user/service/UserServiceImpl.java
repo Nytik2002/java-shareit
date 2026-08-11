@@ -10,6 +10,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//Сервиса для работы с пользователями
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -18,6 +19,7 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
+    //Создание нового пользователя c проверкой полей
     @Override
     public UserDto create(UserDto userDto) {
         if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
@@ -32,9 +34,10 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(savedUser);
     }
 
+    //Обновление пользователя
     @Override
     public UserDto update(Long id, UserDto userDto) {
-        //Сначала проверяем уникальность email
+        //Проверка уникальности email
         if (userDto.getEmail() != null) {
             userRepository.findAll().stream()
                     .filter(u -> !u.getId().equals(id))
@@ -45,7 +48,7 @@ public class UserServiceImpl implements UserService {
                     });
         }
 
-        //Потом проверяем существование пользователя
+        //Проверка на существование пользователя
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -60,6 +63,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(updatedUser);
     }
 
+    //Получение пользователя по ID
     @Override
     public UserDto getById(Long id) {
         User user = userRepository.findById(id)
@@ -67,6 +71,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(user);
     }
 
+    //Получение списка всех пользователей
     @Override
     public List<UserDto> getAll() {
         return userRepository.findAll().stream()
@@ -74,6 +79,7 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    //Удаление по ID
     @Override
     public void delete(Long id) {
         userRepository.deleteById(id);

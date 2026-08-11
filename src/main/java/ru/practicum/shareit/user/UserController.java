@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
+//Контроллер HTTP-запросов
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {
@@ -19,27 +20,32 @@ public class UserController {
         this.userService = userService;
     }
 
+    //Создание нового пользователя
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto create(@Valid @RequestBody UserDto userDto) {
         return userService.create(userDto);
     }
 
+    //Обновление пользователя
     @PatchMapping("/{userId}")
     public UserDto update(@PathVariable Long userId, @RequestBody UserDto userDto) {
         return userService.update(userId, userDto);
     }
 
+    //Получение ID
     @GetMapping("/{userId}")
     public UserDto getById(@PathVariable Long userId) {
         return userService.getById(userId);
     }
 
+    //Получение всех пользователей
     @GetMapping
     public List<UserDto> getAll() {
         return userService.getAll();
     }
 
+    //Удаление
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long userId) {
