@@ -106,9 +106,20 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDto(updatedBooking);
     }
 
+    //Получение бронирования по ID
     @Override
     public BookingDto getById(Long userId, Long bookingId) {
-        return null;
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        Long bookerId = booking.getBooker().getId();
+        Long ownerId = booking.getItem().getOwner().getId();
+
+        if (!bookerId.equals(userId) && !ownerId.equals(userId)) {
+            throw new RuntimeException("Booking not found");
+        }
+
+        return BookingMapper.toBookingDto(booking);
     }
 
     @Override
