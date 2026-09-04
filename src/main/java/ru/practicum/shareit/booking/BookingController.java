@@ -51,11 +51,19 @@ public class BookingController {
         return bookingService.getById(userId, bookingId);
     }
 
-    //Получение бронирований текущего пользователя
+    //Получение текущего пользователя
     @GetMapping
     public List<BookingDto> getAllByBooker(
             @RequestHeader(ShareitConstants.XSharerID) Long userId,
             @RequestParam(defaultValue = "ALL") BookingState state) {
         return bookingService.getAllByBooker(userId, state);
+    }
+
+    //Получение вещей владельца
+    @GetMapping("/owner")
+    public List<BookingDto> getAllByOwner(
+            @RequestHeader(ShareitConstants.XSharerID) Long userId,
+            @RequestParam(defaultValue = "ALL") BookingState state) {
+        return bookingService.getAllByOwner(userId, state);
     }
 }

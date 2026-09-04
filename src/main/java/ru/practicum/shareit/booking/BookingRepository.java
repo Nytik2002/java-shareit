@@ -9,6 +9,7 @@ import java.util.List;
 //Репозиторий для работы с бронированиями
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    //Бронирования пользователя
     List<Booking> findByBooker_Id(Long bookerId, Sort sort);
 
     List<Booking> findByBooker_IdAndStartBeforeAndEndAfter(
@@ -29,6 +30,30 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByBooker_IdAndStatus(
             Long bookerId,
+            BookingStatus status,
+            Sort sort);
+
+    //Бронирования вещей владельца
+    List<Booking> findByItem_Owner_Id(Long ownerId, Sort sort);
+
+    List<Booking> findByItem_Owner_IdAndStartBeforeAndEndAfter(
+            Long ownerId,
+            LocalDateTime start,
+            LocalDateTime end,
+            Sort sort);
+
+    List<Booking> findByItem_Owner_IdAndEndBefore(
+            Long ownerId,
+            LocalDateTime end,
+            Sort sort);
+
+    List<Booking> findByItem_Owner_IdAndStartAfter(
+            Long ownerId,
+            LocalDateTime start,
+            Sort sort);
+
+    List<Booking> findByItem_Owner_IdAndStatus(
+            Long ownerId,
             BookingStatus status,
             Sort sort);
 }
