@@ -1,35 +1,38 @@
 package ru.practicum.shareit.booking.mapper;
 
 import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.dto.BookerDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.item.dto.ItemShortDto;
 
 //Маппер для преобразования Booking в DTO
 public class BookingMapper {
 
     public static BookingDto toBookingDto(Booking booking) {
-        Long itemId = null;
-        Long bookerId = null;
-        String status = null;
+        ItemShortDto item = null;
+        BookerDto booker = null;
 
         if (booking.getItem() != null) {
-            itemId = booking.getItem().getId();
+            item = ItemShortDto.builder()
+                    .id(booking.getItem().getId())
+                    .name(booking.getItem().getName())
+                    .build();
         }
 
         if (booking.getBooker() != null) {
-            bookerId = booking.getBooker().getId();
-        }
-
-        if (booking.getStatus() != null) {
-            status = booking.getStatus().name();
+            booker = BookerDto.builder()
+                    .id(booking.getBooker().getId())
+                    .name(booking.getBooker().getName())
+                    .build();
         }
 
         return BookingDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
-                .itemId(itemId)
-                .bookerId(bookerId)
-                .status(status)
+                .item(item)
+                .booker(booker)
+                .status(booking.getStatus())
                 .build();
     }
 
