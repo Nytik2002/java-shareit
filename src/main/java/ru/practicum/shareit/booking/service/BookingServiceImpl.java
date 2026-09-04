@@ -77,9 +77,33 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDto(savedBooking);
     }
 
+    //Подтверждение или отклонение бронирования
     @Override
     public BookingDto approve(Long userId, Long bookingId, Boolean approved) {
-        return null;
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
+            throw new RuntimeException("Only owner can approve booking");
+        }
+
+        if (approved == null) {
+            throw new RuntimeException("Approved status is required");
+        }
+
+        if (booking.getStatus() != BookingStatus.WAITING) {
+            throw new RuntimeException("Booking is already processed");
+        }
+
+        if (approved) {
+            booking.setStatus(BookingStatus.APPROVED);
+        } else {
+            booking.setStatus(BookingStatus.REJECTED);
+        }
+
+        Booking updatedBooking = bookingRepository.save(booking);
+
+        return BookingMapper.toBookingDto(updatedBooking);
     }
 
     @Override
