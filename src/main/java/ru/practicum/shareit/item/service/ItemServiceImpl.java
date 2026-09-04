@@ -1,11 +1,10 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.stereotype.Service;
-
+import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -24,21 +23,21 @@ public class ItemServiceImpl implements ItemService {
         this.userRepository = userRepository;
     }
 
-    //Создание вещицы
+    //Создание вещи
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
-        //Проверка обязательных полей
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
             throw new RuntimeException("Item name is required");
         }
+
         if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
             throw new RuntimeException("Item description is required");
         }
+
         if (itemDto.getAvailable() == null) {
             throw new RuntimeException("Item available status is required");
         }
 
-        //Проверка на существования владельца
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -46,16 +45,16 @@ public class ItemServiceImpl implements ItemService {
         item.setOwner(owner);
 
         Item savedItem = itemRepository.save(item);
+
         return ItemMapper.toItemDto(savedItem);
     }
 
-    //Обновление вещицы
+    //Обновление вещи
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        //Проверка что пользователь является владельцем
         if (!existingItem.getOwner().getId().equals(userId)) {
             throw new RuntimeException("Only owner can update item");
         }
@@ -63,14 +62,17 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getName() != null) {
             existingItem.setName(itemDto.getName());
         }
+
         if (itemDto.getDescription() != null) {
             existingItem.setDescription(itemDto.getDescription());
         }
+
         if (itemDto.getAvailable() != null) {
             existingItem.setAvailable(itemDto.getAvailable());
         }
 
-        Item updatedItem = itemRepository.update(existingItem);
+        Item updatedItem = itemRepository.save(existingItem);
+
         return ItemMapper.toItemDto(updatedItem);
     }
 
@@ -79,23 +81,25 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getById(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
+
         return ItemMapper.toItemDto(item);
     }
 
-    //Получение всех вещей
+    //Получение всех вещей владельца
     @Override
     public List<ItemDto> getAllByOwner(Long userId) {
-        return itemRepository.findAllByOwnerId(userId).stream()
+        return itemRepository.findAllByOwner_Id(userId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
-    //Получение вещей по тексту
+    //Поиск вещей по тексту
     @Override
     public List<ItemDto> search(String text) {
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
         }
+
         return itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
