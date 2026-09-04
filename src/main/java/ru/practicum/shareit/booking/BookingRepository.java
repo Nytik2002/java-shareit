@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 //Репозиторий для работы с бронированиями
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -56,4 +57,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Long ownerId,
             BookingStatus status,
             Sort sort);
+
+    //Последнее завершенное бронирование вещи
+    Optional<Booking> findFirstByItem_IdAndStatusAndEndBeforeOrderByEndDesc(
+            Long itemId,
+            BookingStatus status,
+            LocalDateTime time);
+
+    //Ближайшее будущее бронирование вещи
+    Optional<Booking> findFirstByItem_IdAndStatusAndStartAfterOrderByStartAsc(
+            Long itemId,
+            BookingStatus status,
+            LocalDateTime time);
 }

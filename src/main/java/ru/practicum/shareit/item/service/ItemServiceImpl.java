@@ -1,6 +1,10 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -8,6 +12,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,10 +22,14 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           UserRepository userRepository,
+                           BookingRepository bookingRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     //Создание вещи
@@ -88,8 +97,45 @@ public class ItemServiceImpl implements ItemService {
     //Получение всех вещей владельца
     @Override
     public List<ItemDto> getAllByOwner(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDateTime now = LocalDateTime.now();
+
         return itemRepository.findAllByOwner_Id(userId).stream()
-                .map(ItemMapper::toItemDto)
+                .map(item -> {
+                    ItemDto itemDto = ItemMapper.toItemDto(item);
+
+                    Booking lastBooking = bookingRepository
+                            .findFirstByItem_IdAndStatusAndEndBeforeOrderByEndDesc(
+                                    item.getId(),
+                                    BookingStatus.APPROVED,
+                                    now)
+                            .orElse(null);
+
+                    Booking nextBooking = bookingRepository
+                            .findFirstByItem_IdAndStatusAndStartAfterOrderByStartAsc(
+                                    item.getId(),
+                                    BookingStatus.APPROVED,
+                                    now)
+                            .orElse(null);
+
+                    if (lastBooking != null) {
+                        itemDto.setLastBooking(BookingShortDto.builder()
+                                .id(lastBooking.getId())
+                                .bookerId(lastBooking.getBooker().getId())
+                                .build());
+                    }
+
+                    if (nextBooking != null) {
+                        itemDto.setNextBooking(BookingShortDto.builder()
+                                .id(nextBooking.getId())
+                                .bookerId(nextBooking.getBooker().getId())
+                                .build());
+                    }
+
+                    return itemDto;
+                })
                 .collect(Collectors.toList());
     }
 
