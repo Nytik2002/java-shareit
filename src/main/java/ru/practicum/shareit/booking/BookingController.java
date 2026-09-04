@@ -14,6 +14,8 @@ import ru.practicum.shareit.booking.dto.NewBookingRequest;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.constants.ShareitConstants;
 
+import java.util.List;
+
 //Контроллер для работы с бронированиями
 @RestController
 @RequestMapping("/bookings")
@@ -47,5 +49,13 @@ public class BookingController {
             @RequestHeader(ShareitConstants.XSharerID) Long userId,
             @PathVariable Long bookingId) {
         return bookingService.getById(userId, bookingId);
+    }
+
+    //Получение бронирований текущего пользователя
+    @GetMapping
+    public List<BookingDto> getAllByBooker(
+            @RequestHeader(ShareitConstants.XSharerID) Long userId,
+            @RequestParam(defaultValue = "ALL") BookingState state) {
+        return bookingService.getAllByBooker(userId, state);
     }
 }

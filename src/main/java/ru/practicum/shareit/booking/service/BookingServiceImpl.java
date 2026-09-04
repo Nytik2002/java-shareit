@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //Реализация сервиса для работы с бронированиями
 @Service
@@ -122,9 +124,52 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingDto(booking);
     }
 
+    //Получение бронирований текущего пользователя
     @Override
     public List<BookingDto> getAllByBooker(Long userId, BookingState state) {
-        return null;
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Booking> bookings;
+
+        if (state == BookingState.ALL) {
+            bookings = bookingRepository.findByBooker_Id(userId, sort);
+        } else if (state == BookingState.CURRENT) {
+            bookings = bookingRepository.findByBooker_IdAndStartBeforeAndEndAfter(
+                    userId,
+                    now,
+                    now,
+                    sort);
+        } else if (state == BookingState.PAST) {
+            bookings = bookingRepository.findByBooker_IdAndEndBefore(
+                    userId,
+                    now,
+                    sort);
+        } else if (state == BookingState.FUTURE) {
+            bookings = bookingRepository.findByBooker_IdAndStartAfter(
+                    userId,
+                    now,
+                    sort);
+        } else if (state == BookingState.WAITING) {
+            bookings = bookingRepository.findByBooker_IdAndStatus(
+                    userId,
+                    BookingStatus.WAITING,
+                    sort);
+        } else if (state == BookingState.REJECTED) {
+            bookings = bookingRepository.findByBooker_IdAndStatus(
+                    userId,
+                    BookingStatus.REJECTED,
+                    sort);
+        } else {
+            throw new RuntimeException("Unknown booking state");
+        }
+
+        return bookings.stream()
+                .map(BookingMapper::toBookingDto)
+                .collect(Collectors.toList());
     }
 
     @Override
