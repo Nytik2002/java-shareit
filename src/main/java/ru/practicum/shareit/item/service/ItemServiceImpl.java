@@ -87,11 +87,50 @@ public class ItemServiceImpl implements ItemService {
 
     //Получение вещи по ID
     @Override
-    public ItemDto getById(Long itemId) {
+    public ItemDto getById(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        return ItemMapper.toItemDto(item);
+        ItemDto itemDto = ItemMapper.toItemDto(item);
+
+        //Данные бронирований показываем только владельцу вещи
+        if (item.getOwner().getId().equals(userId)) {
+            LocalDateTime now = LocalDateTime.now();
+
+            Booking lastBooking = bookingRepository
+                    .findFirstByItem_IdAndStatusAndEndBeforeOrderByEndDesc(
+                            itemId,
+                            BookingStatus.APPROVED,
+                            now)
+                    .orElse(null);
+
+            Booking nextBooking = bookingRepository
+                    .findFirstByItem_IdAndStatusAndStartAfterOrderByStartAsc(
+                            itemId,
+                            BookingStatus.APPROVED,
+                            now)
+                    .orElse(null);
+
+            if (lastBooking != null) {
+                BookingShortDto lastBookingDto = BookingShortDto.builder()
+                        .id(lastBooking.getId())
+                        .bookerId(lastBooking.getBooker().getId())
+                        .build();
+
+                itemDto.setLastBooking(lastBookingDto);
+            }
+
+            if (nextBooking != null) {
+                BookingShortDto nextBookingDto = BookingShortDto.builder()
+                        .id(nextBooking.getId())
+                        .bookerId(nextBooking.getBooker().getId())
+                        .build();
+
+                itemDto.setNextBooking(nextBookingDto);
+            }
+        }
+
+        return itemDto;
     }
 
     //Получение всех вещей владельца
