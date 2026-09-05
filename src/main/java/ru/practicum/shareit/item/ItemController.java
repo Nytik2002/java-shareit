@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.constants.ShareitConstants;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
@@ -60,9 +61,18 @@ public class ItemController {
         return itemService.getAllByOwner(userId);
     }
 
-    //Получение вещей по тексту
+    //Поиск вещей по тексту
     @GetMapping("/search")
     public List<ItemDto> search(@RequestParam String text) {
         return itemService.search(text);
+    }
+
+    //Добавление комментария
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(
+            @RequestHeader(ShareitConstants.XSharerID) Long userId,
+            @PathVariable Long itemId,
+            @RequestBody CommentDto commentDto) {
+        return itemService.addComment(userId, itemId, commentDto);
     }
 }

@@ -5,6 +5,10 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
+import ru.practicum.shareit.comment.CommentRepository;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.mapper.CommentMapper;
+import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -23,13 +27,16 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     public ItemServiceImpl(ItemRepository itemRepository,
                            UserRepository userRepository,
-                           BookingRepository bookingRepository) {
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     //Создание вещи
@@ -93,12 +100,15 @@ public class ItemServiceImpl implements ItemService {
 
         ItemDto itemDto = ItemMapper.toItemDto(item);
 
-        //Данные бронирований показываем только владельцу вещи
+        //Получаем комментарии вещи
+        itemDto.setComments(getComments(itemId));
+
+        //Данные бронирований для владельца вещи
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
 
             Booking lastBooking = bookingRepository
-                    .findFirstByItem_IdAndStatusAndEndBeforeOrderByEndDesc(
+                    .findFirstByItem_IdAndStatusAndStartBeforeOrderByStartDesc(
                             itemId,
                             BookingStatus.APPROVED,
                             now)
@@ -145,8 +155,11 @@ public class ItemServiceImpl implements ItemService {
                 .map(item -> {
                     ItemDto itemDto = ItemMapper.toItemDto(item);
 
+                    //Добавляем комментарии
+                    itemDto.setComments(getComments(item.getId()));
+
                     Booking lastBooking = bookingRepository
-                            .findFirstByItem_IdAndStatusAndEndBeforeOrderByEndDesc(
+                            .findFirstByItem_IdAndStatusAndStartBeforeOrderByStartDesc(
                                     item.getId(),
                                     BookingStatus.APPROVED,
                                     now)
@@ -187,6 +200,51 @@ public class ItemServiceImpl implements ItemService {
 
         return itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
+    }
+
+    //Добавление комментария
+    @Override
+    public CommentDto addComment(Long userId, Long itemId, CommentDto commentDto) {
+        if (commentDto.getText() == null || commentDto.getText().isBlank()) {
+            throw new RuntimeException("Comment text is required");
+        }
+
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        boolean hasCompletedBooking =
+                bookingRepository.existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
+                        userId,
+                        itemId,
+                        BookingStatus.APPROVED,
+                        now);
+
+        if (!hasCompletedBooking) {
+            throw new RuntimeException("User has not completed booking");
+        }
+
+        Comment comment = Comment.builder()
+                .text(commentDto.getText())
+                .item(item)
+                .author(author)
+                .created(now)
+                .build();
+
+        Comment savedComment = commentRepository.save(comment);
+
+        return CommentMapper.toCommentDto(savedComment);
+    }
+
+    //Получение комментариев вещи
+    private List<CommentDto> getComments(Long itemId) {
+        return commentRepository.findAllByItem_IdOrderByCreatedAsc(itemId).stream()
+                .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
 }
