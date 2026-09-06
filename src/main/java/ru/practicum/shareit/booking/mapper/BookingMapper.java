@@ -1,14 +1,17 @@
 package ru.practicum.shareit.booking.mapper;
 
+import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dto.BookerDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.item.dto.ItemShortDto;
 
 //Маппер для преобразования Booking в DTO
+@UtilityClass
 public class BookingMapper {
 
-    public static BookingDto toBookingDto(Booking booking) {
+    //Преобразование Booking в BookingDto
+    public BookingDto toBookingDto(Booking booking) {
         ItemShortDto item = null;
         BookerDto booker = null;
 
@@ -34,8 +37,5 @@ public class BookingMapper {
                 .booker(booker)
                 .status(booking.getStatus())
                 .build();
-    }
-
-    private BookingMapper() {
     }
 }

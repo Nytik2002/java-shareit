@@ -1,12 +1,15 @@
 package ru.practicum.shareit.comment.mapper;
 
+import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.model.Comment;
 
 //Маппер для преобразования комментария в DTO
+@UtilityClass
 public class CommentMapper {
 
-    public static CommentDto toCommentDto(Comment comment) {
+    //Преобразование Comment в CommentDto
+    public CommentDto toCommentDto(Comment comment) {
         String authorName = null;
 
         if (comment.getAuthor() != null) {
@@ -19,8 +22,5 @@ public class CommentMapper {
                 .authorName(authorName)
                 .created(comment.getCreated())
                 .build();
-    }
-
-    private CommentMapper() {
     }
 }
