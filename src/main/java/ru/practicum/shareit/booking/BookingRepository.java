@@ -2,12 +2,14 @@ package ru.practicum.shareit.booking;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 //Репозиторий для работы с бронированиями
+@Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     //Бронирования пользователя
@@ -58,19 +60,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             BookingStatus status,
             Sort sort);
 
-    //Последнее бронирование
+    //Последнее бронирование вещи
     Optional<Booking> findFirstByItem_IdAndStatusAndStartBeforeOrderByStartDesc(
             Long itemId,
             BookingStatus status,
             LocalDateTime time);
 
-    //Ближайшее бронирование
+    //Ближайшее подтвержденное бронирование вещи
     Optional<Booking> findFirstByItem_IdAndStatusAndStartAfterOrderByStartAsc(
             Long itemId,
             BookingStatus status,
             LocalDateTime time);
 
-    //Проверка бронирования пользователя
+    //Проверка завершенного бронирования пользователя
     boolean existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
             Long bookerId,
             Long itemId,
