@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -9,6 +10,9 @@ import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.mapper.CommentMapper;
 import ru.practicum.shareit.comment.model.Comment;
+import ru.practicum.shareit.exception.ForbiddenException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -23,39 +27,31 @@ import java.util.stream.Collectors;
 
 //Реализация сервиса для работы с вещами
 @Service
+@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
+
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
-    public ItemServiceImpl(ItemRepository itemRepository,
-                           UserRepository userRepository,
-                           BookingRepository bookingRepository,
-                           CommentRepository commentRepository) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.bookingRepository = bookingRepository;
-        this.commentRepository = commentRepository;
-    }
-
     //Создание вещи
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new RuntimeException("Item name is required");
+            throw new ValidationException("Item name is required");
         }
 
         if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new RuntimeException("Item description is required");
+            throw new ValidationException("Item description is required");
         }
 
         if (itemDto.getAvailable() == null) {
-            throw new RuntimeException("Item available status is required");
+            throw new ValidationException("Item available status is required");
         }
 
         User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
@@ -69,10 +65,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
         Item existingItem = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         if (!existingItem.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("Only owner can update item");
+            throw new ForbiddenException("Only owner can update item");
         }
 
         if (itemDto.getName() != null) {
@@ -96,7 +92,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getById(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         ItemDto itemDto = ItemMapper.toItemDto(item);
 
@@ -147,7 +143,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getAllByOwner(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -207,14 +203,14 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public CommentDto addComment(Long userId, Long itemId, CommentDto commentDto) {
         if (commentDto.getText() == null || commentDto.getText().isBlank()) {
-            throw new RuntimeException("Comment text is required");
+            throw new ValidationException("Comment text is required");
         }
 
         User author = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -226,7 +222,7 @@ public class ItemServiceImpl implements ItemService {
                         now);
 
         if (!hasCompletedBooking) {
-            throw new RuntimeException("User has not completed booking");
+            throw new ValidationException("User has not completed booking");
         }
 
         Comment comment = Comment.builder()
