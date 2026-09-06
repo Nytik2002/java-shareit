@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,7 +61,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             BookingStatus status,
             Sort sort);
 
-    //Последнее бронирование вещи
+    //Получение бронирований для списка вещей
+    List<Booking> findByItemInAndStatus(
+            List<Item> items,
+            BookingStatus status,
+            Sort sort);
+
+    //Последнее подтвержденное бронирование вещи
     Optional<Booking> findFirstByItem_IdAndStatusAndStartBeforeOrderByStartDesc(
             Long itemId,
             BookingStatus status,
@@ -72,7 +79,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             BookingStatus status,
             LocalDateTime time);
 
-    //Проверка завершенного бронирования пользователя
+    //Проверка подтвержденного бронирования пользователя
     boolean existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
             Long bookerId,
             Long itemId,

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -23,6 +24,7 @@ import ru.practicum.shareit.user.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 //Реализация сервиса для работы с вещами
@@ -38,18 +40,6 @@ public class ItemServiceImpl implements ItemService {
     //Создание вещи
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
-        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new ValidationException("Item name is required");
-        }
-
-        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new ValidationException("Item description is required");
-        }
-
-        if (itemDto.getAvailable() == null) {
-            throw new ValidationException("Item available status is required");
-        }
-
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -147,26 +137,67 @@ public class ItemServiceImpl implements ItemService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        return itemRepository.findAllByOwner_Id(userId).stream()
+        //Получаем сразу все вещи владельца
+        List<Item> items = itemRepository.findAllByOwner_Id(userId);
+
+        if (items.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        //Получаем комментарии сразу для всех вещей и группируем по ID вещи
+        Map<Long, List<Comment>> commentsByItem = commentRepository
+                .findByItemIn(items, Sort.by(Sort.Direction.ASC, "created"))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        comment -> comment.getItem().getId()
+                ));
+
+        //Получаем подтверждённые бронирования сразу для всех вещей
+        Map<Long, List<Booking>> bookingsByItem = bookingRepository
+                .findByItemInAndStatus(
+                        items,
+                        BookingStatus.APPROVED,
+                        Sort.by(Sort.Direction.ASC, "start"))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        booking -> booking.getItem().getId()
+                ));
+
+        return items.stream()
                 .map(item -> {
                     ItemDto itemDto = ItemMapper.toItemDto(item);
 
-                    //Добавляем комментарии
-                    itemDto.setComments(getComments(item.getId()));
+                    //Берём комментарии из Map без нового запроса в базу
+                    List<CommentDto> comments = commentsByItem
+                            .getOrDefault(item.getId(), Collections.emptyList())
+                            .stream()
+                            .map(CommentMapper::toCommentDto)
+                            .collect(Collectors.toList());
 
-                    Booking lastBooking = bookingRepository
-                            .findFirstByItem_IdAndStatusAndStartBeforeOrderByStartDesc(
-                                    item.getId(),
-                                    BookingStatus.APPROVED,
-                                    now)
-                            .orElse(null);
+                    itemDto.setComments(comments);
 
-                    Booking nextBooking = bookingRepository
-                            .findFirstByItem_IdAndStatusAndStartAfterOrderByStartAsc(
-                                    item.getId(),
-                                    BookingStatus.APPROVED,
-                                    now)
-                            .orElse(null);
+                    //Берём бронирования из Map без нового запроса в базу
+                    List<Booking> itemBookings = bookingsByItem
+                            .getOrDefault(item.getId(), Collections.emptyList());
+
+                    Booking lastBooking = null;
+                    Booking nextBooking = null;
+
+                    for (Booking booking : itemBookings) {
+                        if (booking.getStart().isBefore(now)) {
+                            if (lastBooking == null
+                                    || booking.getStart().isAfter(lastBooking.getStart())) {
+                                lastBooking = booking;
+                            }
+                        }
+
+                        if (booking.getStart().isAfter(now)) {
+                            if (nextBooking == null
+                                    || booking.getStart().isBefore(nextBooking.getStart())) {
+                                nextBooking = booking;
+                            }
+                        }
+                    }
 
                     if (lastBooking != null) {
                         itemDto.setLastBooking(BookingShortDto.builder()
@@ -202,10 +233,6 @@ public class ItemServiceImpl implements ItemService {
     //Добавление комментария
     @Override
     public CommentDto addComment(Long userId, Long itemId, CommentDto commentDto) {
-        if (commentDto.getText() == null || commentDto.getText().isBlank()) {
-            throw new ValidationException("Comment text is required");
-        }
-
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
