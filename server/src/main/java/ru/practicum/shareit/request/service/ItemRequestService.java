@@ -15,4 +15,7 @@ public interface ItemRequestService {
 
     //Получение запросов других пользователей
     List<ItemRequestDto> getAllRequests(Long userId);
+
+    //Получение одного запроса по ID
+    ItemRequestDto getById(Long userId, Long requestId);
 }

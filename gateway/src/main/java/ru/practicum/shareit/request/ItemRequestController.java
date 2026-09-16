@@ -35,4 +35,12 @@ public class ItemRequestController {
 
         return itemRequestClient.getOwnRequests(userId);
     }
+
+    //Получение запросов других пользователей
+    @GetMapping("/all")
+    public ResponseEntity<Object> getAllRequests(
+            @RequestHeader("X-Sharer-User-Id") Long userId) {
+
+        return itemRequestClient.getAllRequests(userId);
+    }
 }

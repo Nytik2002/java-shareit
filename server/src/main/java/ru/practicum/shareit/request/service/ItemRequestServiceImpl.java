@@ -71,7 +71,21 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return getRequestsWithItems(requests);
     }
 
-    //Добавление вещей/ответов к запросам
+    //Получение одного запроса по ID
+    @Override
+    public ItemRequestDto getById(Long userId, Long requestId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        ItemRequest request = itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Request not found"));
+
+        List<Item> items = itemRepository.findAllByRequest_Id(requestId);
+
+        return ItemRequestMapper.toItemRequestDto(request, items);
+    }
+
+    //Добавление вещей-ответов к запросам
     private List<ItemRequestDto> getRequestsWithItems(List<ItemRequest> requests) {
         if (requests.isEmpty()) {
             return Collections.emptyList();

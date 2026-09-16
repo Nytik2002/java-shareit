@@ -17,6 +17,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     //Получение вещей созданных в ответ на запросы
     List<Item> findAllByRequest_IdIn(List<Long> requestIds);
 
+    //Получение вещей созданных в ответ на один запрос
+    List<Item> findAllByRequest_Id(Long requestId);
+
     //Поиск доступных вещей по названию или описанию
     @Query("select i from Item i " +
             "where i.available = true " +
