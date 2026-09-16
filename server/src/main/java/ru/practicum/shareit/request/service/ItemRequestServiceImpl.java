@@ -3,6 +3,8 @@ package ru.practicum.shareit.request.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -12,6 +14,9 @@ import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 //Реализация сервиса для работы с запросами вещей
 @Service
@@ -20,6 +25,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
 
     //Создание нового запроса вещи
     @Override
@@ -39,5 +45,40 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 savedRequest,
                 Collections.emptyList()
         );
+    }
+
+    //Получение запросов пользователя
+    @Override
+    public List<ItemRequestDto> getOwnRequests(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        List<ItemRequest> requests =
+                itemRequestRepository.findAllByRequestor_IdOrderByCreatedDesc(userId);
+
+        if (requests.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> requestIds = requests.stream()
+                .map(ItemRequest::getId)
+                .collect(Collectors.toList());
+
+        List<Item> items = itemRepository.findAllByRequest_IdIn(requestIds);
+
+        Map<Long, List<Item>> itemsByRequest = items.stream()
+                .collect(Collectors.groupingBy(
+                        item -> item.getRequest().getId()
+                ));
+
+        return requests.stream()
+                .map(request -> ItemRequestMapper.toItemRequestDto(
+                        request,
+                        itemsByRequest.getOrDefault(
+                                request.getId(),
+                                Collections.emptyList()
+                        )
+                ))
+                .collect(Collectors.toList());
     }
 }
