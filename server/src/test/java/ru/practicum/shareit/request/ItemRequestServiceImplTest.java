@@ -10,6 +10,9 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,5 +62,88 @@ public class ItemRequestServiceImplTest {
         assertEquals("Нужна дрель", savedRequest.getDescription());
         assertEquals(savedUser.getId(), savedRequest.getRequestor().getId());
         assertNotNull(savedRequest.getCreated());
+    }
+
+    //Получение своих запросов
+    @Test
+    void getOwnRequestsShouldReturnRequestsFromNewestToOldest() {
+        User user = User.builder()
+                .name("Иван")
+                .email("ivan@test.ru")
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        ItemRequest oldRequest = ItemRequest.builder()
+                .description("Старый запрос")
+                .requestor(savedUser)
+                .created(LocalDateTime.now().minusHours(2))
+                .build();
+
+        ItemRequest newRequest = ItemRequest.builder()
+                .description("Новый запрос")
+                .requestor(savedUser)
+                .created(LocalDateTime.now().minusHours(1))
+                .build();
+
+        itemRequestRepository.save(oldRequest);
+        itemRequestRepository.save(newRequest);
+
+        List<ItemRequestDto> result =
+                itemRequestService.getOwnRequests(savedUser.getId());
+
+        assertEquals(2, result.size());
+        assertEquals("Новый запрос", result.get(0).getDescription());
+        assertEquals("Старый запрос", result.get(1).getDescription());
+        assertNotNull(result.get(0).getItems());
+        assertNotNull(result.get(1).getItems());
+    }
+
+    //Получение запросов других пользователей
+    @Test
+    void getAllRequestsShouldReturnOnlyOtherUsersRequests() {
+        User currentUser = User.builder()
+                .name("Пётр")
+                .email("petr@test.ru")
+                .build();
+
+        User otherUser = User.builder()
+                .name("Мария")
+                .email("maria@test.ru")
+                .build();
+
+        User savedCurrentUser = userRepository.save(currentUser);
+        User savedOtherUser = userRepository.save(otherUser);
+
+        ItemRequest ownRequest = ItemRequest.builder()
+                .description("Мой запрос")
+                .requestor(savedCurrentUser)
+                .created(LocalDateTime.now().minusHours(1))
+                .build();
+
+        ItemRequest otherOldRequest = ItemRequest.builder()
+                .description("Старый чужой запрос")
+                .requestor(savedOtherUser)
+                .created(LocalDateTime.now().minusHours(3))
+                .build();
+
+        ItemRequest otherNewRequest = ItemRequest.builder()
+                .description("Новый чужой запрос")
+                .requestor(savedOtherUser)
+                .created(LocalDateTime.now().minusHours(2))
+                .build();
+
+        itemRequestRepository.save(ownRequest);
+        itemRequestRepository.save(otherOldRequest);
+        itemRequestRepository.save(otherNewRequest);
+
+        List<ItemRequestDto> result =
+                itemRequestService.getAllRequests(savedCurrentUser.getId());
+
+        assertEquals(2, result.size());
+        assertEquals("Новый чужой запрос", result.get(0).getDescription());
+        assertEquals("Старый чужой запрос", result.get(1).getDescription());
+        assertTrue(result.stream()
+                .noneMatch(request -> "Мой запрос".equals(request.getDescription())));
     }
 }
