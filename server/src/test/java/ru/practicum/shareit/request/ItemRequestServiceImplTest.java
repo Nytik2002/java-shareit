@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.User;
@@ -31,6 +33,9 @@ public class ItemRequestServiceImplTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
 
     //Создание запроса вещи
     @Test
@@ -64,7 +69,7 @@ public class ItemRequestServiceImplTest {
         assertNotNull(savedRequest.getCreated());
     }
 
-    //Получение своих запросов
+    //Получение своих запросов от новых к старым
     @Test
     void getOwnRequestsShouldReturnRequestsFromNewestToOldest() {
         User user = User.builder()
@@ -143,7 +148,59 @@ public class ItemRequestServiceImplTest {
         assertEquals(2, result.size());
         assertEquals("Новый чужой запрос", result.get(0).getDescription());
         assertEquals("Старый чужой запрос", result.get(1).getDescription());
+
         assertTrue(result.stream()
-                .noneMatch(request -> "Мой запрос".equals(request.getDescription())));
+                .noneMatch(request ->
+                        "Мой запрос".equals(request.getDescription())));
+    }
+
+    //Получение одного запроса вместе с вещью/ответом
+    @Test
+    void getByIdShouldReturnRequestWithItem() {
+        User requestor = User.builder()
+                .name("Ольга")
+                .email("olga@test.ru")
+                .build();
+
+        User owner = User.builder()
+                .name("Сергей")
+                .email("sergey@test.ru")
+                .build();
+
+        User savedRequestor = userRepository.save(requestor);
+        User savedOwner = userRepository.save(owner);
+
+        ItemRequest request = ItemRequest.builder()
+                .description("Нужен перфоратор")
+                .requestor(savedRequestor)
+                .created(LocalDateTime.now())
+                .build();
+
+        ItemRequest savedRequest = itemRequestRepository.save(request);
+
+        Item item = Item.builder()
+                .name("Перфоратор")
+                .description("Мощный перфоратор")
+                .available(true)
+                .owner(savedOwner)
+                .request(savedRequest)
+                .build();
+
+        Item savedItem = itemRepository.save(item);
+
+        ItemRequestDto result =
+                itemRequestService.getById(
+                        savedOwner.getId(),
+                        savedRequest.getId()
+                );
+
+        assertEquals(savedRequest.getId(), result.getId());
+        assertEquals("Нужен перфоратор", result.getDescription());
+        assertNotNull(result.getCreated());
+
+        assertEquals(1, result.getItems().size());
+        assertEquals(savedItem.getId(), result.getItems().get(0).getId());
+        assertEquals("Перфоратор", result.getItems().get(0).getName());
+        assertEquals(savedOwner.getId(), result.getItems().get(0).getOwnerId());
     }
 }
