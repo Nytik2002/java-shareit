@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,5 +26,13 @@ public class ItemRequestController {
             @Valid @RequestBody ItemRequestDto requestDto) {
 
         return itemRequestClient.create(userId, requestDto);
+    }
+
+    //Получение запросов пользователя
+    @GetMapping
+    public ResponseEntity<Object> getOwnRequests(
+            @RequestHeader("X-Sharer-User-Id") Long userId) {
+
+        return itemRequestClient.getOwnRequests(userId);
     }
 }

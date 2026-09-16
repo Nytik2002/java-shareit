@@ -36,4 +36,9 @@ public class ItemRequestClient extends BaseClient {
 
         return post("", userId, requestDto);
     }
+
+    //Получение запросов пользователя
+    public ResponseEntity<Object> getOwnRequests(Long userId) {
+        return get("", userId);
+    }
 }
