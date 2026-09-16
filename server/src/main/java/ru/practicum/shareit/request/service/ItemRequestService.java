@@ -12,4 +12,7 @@ public interface ItemRequestService {
 
     //Получение запросов пользователя
     List<ItemRequestDto> getOwnRequests(Long userId);
+
+    //Получение запросов других пользователей
+    List<ItemRequestDto> getAllRequests(Long userId);
 }

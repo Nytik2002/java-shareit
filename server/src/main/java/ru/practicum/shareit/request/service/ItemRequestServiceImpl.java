@@ -56,6 +56,23 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         List<ItemRequest> requests =
                 itemRequestRepository.findAllByRequestor_IdOrderByCreatedDesc(userId);
 
+        return getRequestsWithItems(requests);
+    }
+
+    //Получение запросов других пользователей
+    @Override
+    public List<ItemRequestDto> getAllRequests(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        List<ItemRequest> requests =
+                itemRequestRepository.findAllByRequestor_IdNotOrderByCreatedDesc(userId);
+
+        return getRequestsWithItems(requests);
+    }
+
+    //Добавление вещей/ответов к запросам
+    private List<ItemRequestDto> getRequestsWithItems(List<ItemRequest> requests) {
         if (requests.isEmpty()) {
             return Collections.emptyList();
         }

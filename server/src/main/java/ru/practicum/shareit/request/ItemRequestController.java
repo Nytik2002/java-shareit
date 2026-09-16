@@ -37,4 +37,12 @@ public class ItemRequestController {
 
         return itemRequestService.getOwnRequests(userId);
     }
+
+    //Получение запросов других пользователей
+    @GetMapping("/all")
+    public List<ItemRequestDto> getAllRequests(
+            @RequestHeader(ShareitConstants.XSharerID) Long userId) {
+
+        return itemRequestService.getAllRequests(userId);
+    }
 }
