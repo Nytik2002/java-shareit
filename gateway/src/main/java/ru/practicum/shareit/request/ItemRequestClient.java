@@ -46,4 +46,12 @@ public class ItemRequestClient extends BaseClient {
     public ResponseEntity<Object> getAllRequests(Long userId) {
         return get("/all", userId);
     }
+
+    //Получение одного запроса по ID
+    public ResponseEntity<Object> getById(
+            Long userId,
+            Long requestId) {
+
+        return get("/" + requestId, userId);
+    }
 }
