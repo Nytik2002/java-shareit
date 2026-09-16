@@ -1,7 +1,7 @@
 package ru.practicum.shareit.comment.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.shareit.comment.CommentDto;
+import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.model.Comment;
 
 //Маппер для преобразования комментария в DTO

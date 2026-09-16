@@ -4,7 +4,7 @@ import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dto.BookerDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.item.ItemShortDto;
+import ru.practicum.shareit.item.dto.ItemShortDto;
 
 //Маппер для преобразования Booking в DTO
 @UtilityClass

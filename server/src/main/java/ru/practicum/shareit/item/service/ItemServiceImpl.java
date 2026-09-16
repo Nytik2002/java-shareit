@@ -8,16 +8,18 @@ import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.comment.CommentRepository;
-import ru.practicum.shareit.comment.CommentDto;
+import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.mapper.CommentMapper;
 import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
-import ru.practicum.shareit.item.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -36,6 +38,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     //Создание вещи
     @Override
@@ -45,6 +48,15 @@ public class ItemServiceImpl implements ItemService {
 
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
+
+        //Если вещь создаётся в ответ на запрос
+        if (itemDto.getRequestId() != null) {
+            ItemRequest request = itemRequestRepository
+                    .findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new NotFoundException("Request not found"));
+
+            item.setRequest(request);
+        }
 
         Item savedItem = itemRepository.save(item);
 
