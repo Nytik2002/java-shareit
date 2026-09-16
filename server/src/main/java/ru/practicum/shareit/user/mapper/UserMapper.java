@@ -2,7 +2,7 @@ package ru.practicum.shareit.user.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 //Маппер для преобразования User и UserDto
 @UtilityClass

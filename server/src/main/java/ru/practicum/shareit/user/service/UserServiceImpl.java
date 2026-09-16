@@ -4,33 +4,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
-import ru.practicum.shareit.user.UserDto;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-//Сервис для работы с пользователями
+//Реализация сервиса для работы с пользователями
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    //Создание нового пользователя
+    //Создание пользователя
     @Override
     public UserDto create(UserDto userDto) {
-        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
-            throw new ValidationException("Email is required");
-        }
-
-        if (userDto.getName() == null || userDto.getName().isBlank()) {
-            throw new ValidationException("Name is required");
-        }
-
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
             throw new ConflictException("Email already exists");
         }
@@ -49,9 +40,10 @@ public class UserServiceImpl implements UserService {
 
         if (userDto.getEmail() != null) {
             userRepository.findByEmail(userDto.getEmail())
-                    .filter(user -> !user.getId().equals(id))
                     .ifPresent(user -> {
-                        throw new ConflictException("Email already exists");
+                        if (!user.getId().equals(id)) {
+                            throw new ConflictException("Email already exists");
+                        }
                     });
 
             existingUser.setEmail(userDto.getEmail());
@@ -75,7 +67,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(user);
     }
 
-    //Получение списка всех пользователей
+    //Получение всех пользователей
     @Override
     public List<UserDto> getAll() {
         return userRepository.findAll().stream()
@@ -86,6 +78,10 @@ public class UserServiceImpl implements UserService {
     //Удаление пользователя
     @Override
     public void delete(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new NotFoundException("User not found");
+        }
+
         userRepository.deleteById(id);
     }
 }
