@@ -104,6 +104,80 @@ public class ItemRequestServiceImplTest {
         assertNotNull(result.get(1).getItems());
     }
 
+    //Получение пустого списка, если у пользователя нет запросов
+    @Test
+    void getOwnRequestsShouldReturnEmptyListWhenThereAreNoRequests() {
+        User user = User.builder()
+                .name("Александр")
+                .email("empty-requests@test.ru")
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        List<ItemRequestDto> result =
+                itemRequestService.getOwnRequests(savedUser.getId());
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    //Получение своего запроса вместе с вещью-ответом
+    @Test
+    void getOwnRequestsShouldReturnRequestWithItem() {
+        User requestor = User.builder()
+                .name("Николай")
+                .email("requestor-item@test.ru")
+                .build();
+
+        User owner = User.builder()
+                .name("Андрей")
+                .email("owner-item@test.ru")
+                .build();
+
+        User savedRequestor = userRepository.save(requestor);
+        User savedOwner = userRepository.save(owner);
+
+        ItemRequest request = ItemRequest.builder()
+                .description("Нужна шлифовальная машина")
+                .requestor(savedRequestor)
+                .created(LocalDateTime.now())
+                .build();
+
+        ItemRequest savedRequest =
+                itemRequestRepository.save(request);
+
+        Item item = Item.builder()
+                .name("Шлифовальная машина")
+                .description("Электрическая")
+                .available(true)
+                .owner(savedOwner)
+                .request(savedRequest)
+                .build();
+
+        Item savedItem = itemRepository.save(item);
+
+        List<ItemRequestDto> result =
+                itemRequestService.getOwnRequests(savedRequestor.getId());
+
+        assertEquals(1, result.size());
+        assertEquals(savedRequest.getId(), result.get(0).getId());
+
+        assertNotNull(result.get(0).getItems());
+        assertEquals(1, result.get(0).getItems().size());
+        assertEquals(
+                savedItem.getId(),
+                result.get(0).getItems().get(0).getId()
+        );
+        assertEquals(
+                "Шлифовальная машина",
+                result.get(0).getItems().get(0).getName()
+        );
+        assertEquals(
+                savedOwner.getId(),
+                result.get(0).getItems().get(0).getOwnerId()
+        );
+    }
+
     //Получение запросов других пользователей
     @Test
     void getAllRequestsShouldReturnOnlyOtherUsersRequests() {

@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.ConflictException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
@@ -13,6 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //Интеграционные тесты сервиса пользователей
@@ -77,6 +80,66 @@ public class UserServiceImplTest {
         assertEquals("ivan@test.ru", updatedUser.getEmail());
     }
 
+    //Обновление электронной почты пользователя
+    @Test
+    void updateShouldChangeEmail() {
+        User user = User.builder()
+                .name("Иван")
+                .email("old@test.ru")
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        UserDto updateDto = UserDto.builder()
+                .email("new@test.ru")
+                .build();
+
+        UserDto result =
+                userService.update(savedUser.getId(), updateDto);
+
+        assertEquals("Иван", result.getName());
+        assertEquals("new@test.ru", result.getEmail());
+    }
+
+    //Проверка конфликта электронной почты
+    @Test
+    void duplicateEmailShouldThrowConflictException() {
+        User firstUser = User.builder()
+                .name("Анна")
+                .email("duplicate@test.ru")
+                .build();
+
+        User secondUser = User.builder()
+                .name("Иван")
+                .email("second@test.ru")
+                .build();
+
+        User savedFirstUser = userRepository.save(firstUser);
+        User savedSecondUser = userRepository.save(secondUser);
+
+        UserDto createDto = UserDto.builder()
+                .name("Мария")
+                .email(savedFirstUser.getEmail())
+                .build();
+
+        assertThrows(
+                ConflictException.class,
+                () -> userService.create(createDto)
+        );
+
+        UserDto updateDto = UserDto.builder()
+                .email(savedFirstUser.getEmail())
+                .build();
+
+        assertThrows(
+                ConflictException.class,
+                () -> userService.update(
+                        savedSecondUser.getId(),
+                        updateDto
+                )
+        );
+    }
+
     //Получение пользователя по ID
     @Test
     void getByIdShouldReturnUser() {
@@ -139,5 +202,33 @@ public class UserServiceImplTest {
         userService.delete(savedUser.getId());
 
         assertFalse(userRepository.existsById(savedUser.getId()));
+    }
+
+    //Проверка отсутствующего пользователя
+    @Test
+    void missingUserShouldThrowNotFoundException() {
+        Long unknownUserId = 999999L;
+
+        UserDto updateDto = UserDto.builder()
+                .name("Новое имя")
+                .build();
+
+        assertThrows(
+                NotFoundException.class,
+                () -> userService.update(
+                        unknownUserId,
+                        updateDto
+                )
+        );
+
+        assertThrows(
+                NotFoundException.class,
+                () -> userService.getById(unknownUserId)
+        );
+
+        assertThrows(
+                NotFoundException.class,
+                () -> userService.delete(unknownUserId)
+        );
     }
 }
