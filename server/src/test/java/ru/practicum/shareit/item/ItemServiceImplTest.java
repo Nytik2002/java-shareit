@@ -266,8 +266,8 @@ public class ItemServiceImplTest {
         User savedBooker = userRepository.save(booker);
 
         Item item = Item.builder()
-                .name("Шуруповёрт")
-                .description("Аккумуляторный шуруповёрт")
+                .name("Шуруповерт")
+                .description("Аккумуляторный шуруповерт")
                 .available(true)
                 .owner(savedOwner)
                 .build();
@@ -285,7 +285,7 @@ public class ItemServiceImplTest {
         bookingRepository.save(booking);
 
         CommentDto commentDto = CommentDto.builder()
-                .text("Отличный шуруповёрт")
+                .text("Отличный шуруповерт")
                 .build();
 
         CommentDto result = itemService.addComment(
@@ -295,12 +295,12 @@ public class ItemServiceImplTest {
         );
 
         assertNotNull(result.getId());
-        assertEquals("Отличный шуруповёрт", result.getText());
+        assertEquals("Отличный шуруповерт", result.getText());
         assertNotNull(result.getCreated());
 
         assertEquals(1, commentRepository.findAll().size());
         assertEquals(
-                "Отличный шуруповёрт",
+                "Отличный шуруповерт",
                 commentRepository.findAll().get(0).getText()
         );
     }
