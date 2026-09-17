@@ -5,12 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.comment.CommentRepository;
+import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +38,12 @@ public class ItemServiceImplTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
     //Создание вещи
     @Test
@@ -235,5 +247,61 @@ public class ItemServiceImplTest {
         assertEquals(1, result.size());
         assertEquals("Дрель", result.get(0).getName());
         assertTrue(result.get(0).getAvailable());
+    }
+
+    //Добавление комментария
+    @Test
+    void addCommentShouldSaveCommentAfterCompletedBooking() {
+        User owner = User.builder()
+                .name("Владелец")
+                .email("owner-comment@test.ru")
+                .build();
+
+        User booker = User.builder()
+                .name("Арендатор")
+                .email("booker-comment@test.ru")
+                .build();
+
+        User savedOwner = userRepository.save(owner);
+        User savedBooker = userRepository.save(booker);
+
+        Item item = Item.builder()
+                .name("Шуруповёрт")
+                .description("Аккумуляторный шуруповёрт")
+                .available(true)
+                .owner(savedOwner)
+                .build();
+
+        Item savedItem = itemRepository.save(item);
+
+        Booking booking = Booking.builder()
+                .start(LocalDateTime.now().minusDays(2))
+                .end(LocalDateTime.now().minusDays(1))
+                .item(savedItem)
+                .booker(savedBooker)
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        bookingRepository.save(booking);
+
+        CommentDto commentDto = CommentDto.builder()
+                .text("Отличный шуруповёрт")
+                .build();
+
+        CommentDto result = itemService.addComment(
+                savedBooker.getId(),
+                savedItem.getId(),
+                commentDto
+        );
+
+        assertNotNull(result.getId());
+        assertEquals("Отличный шуруповёрт", result.getText());
+        assertNotNull(result.getCreated());
+
+        assertEquals(1, commentRepository.findAll().size());
+        assertEquals(
+                "Отличный шуруповёрт",
+                commentRepository.findAll().get(0).getText()
+        );
     }
 }
