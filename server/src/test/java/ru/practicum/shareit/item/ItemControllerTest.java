@@ -40,16 +40,14 @@ public class ItemControllerTest {
         when(itemService.create(eq(1L), any(ItemDto.class)))
                 .thenReturn(null);
 
+        String json = "{\"name\":\"Дрель\","
+                + "\"description\":\"Обычная дрель\","
+                + "\"available\":true}";
+
         mockMvc.perform(post("/items")
                         .header("X-Sharer-User-Id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Дрель",
-                                  "description": "Обычная дрель",
-                                  "available": true
-                                }
-                                """))
+                        .content(json))
                 .andExpect(status().isCreated());
 
         ArgumentCaptor<ItemDto> captor =
@@ -58,8 +56,10 @@ public class ItemControllerTest {
         verify(itemService).create(eq(1L), captor.capture());
 
         assertEquals("Дрель", captor.getValue().getName());
-        assertEquals("Обычная дрель",
-                captor.getValue().getDescription());
+        assertEquals(
+                "Обычная дрель",
+                captor.getValue().getDescription()
+        );
     }
 
     //Обновление вещи
@@ -71,14 +71,12 @@ public class ItemControllerTest {
                 any(ItemDto.class)))
                 .thenReturn(null);
 
+        String json = "{\"name\":\"Новая дрель\"}";
+
         mockMvc.perform(patch("/items/10")
                         .header("X-Sharer-User-Id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Новая дрель"
-                                }
-                                """))
+                        .content(json))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<ItemDto> captor =
@@ -146,14 +144,12 @@ public class ItemControllerTest {
                 any(CommentDto.class)))
                 .thenReturn(null);
 
+        String json = "{\"text\":\"Отличная вещь\"}";
+
         mockMvc.perform(post("/items/10/comment")
                         .header("X-Sharer-User-Id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "text": "Отличная вещь"
-                                }
-                                """))
+                        .content(json))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<CommentDto> captor =

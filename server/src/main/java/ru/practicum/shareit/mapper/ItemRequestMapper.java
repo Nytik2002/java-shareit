@@ -2,7 +2,7 @@ package ru.practicum.shareit.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.ItemRequest;
+import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.dto.ItemRequestDto;
 import ru.practicum.shareit.dto.ItemRequestItemDto;
 

@@ -41,16 +41,14 @@ public class BookingControllerTest {
                 any(NewBookingRequest.class)))
                 .thenReturn(null);
 
+        String json = "{\"itemId\":10,"
+                + "\"start\":\"2026-09-18T10:00:00\","
+                + "\"end\":\"2026-09-19T10:00:00\"}";
+
         mockMvc.perform(post("/bookings")
                         .header("X-Sharer-User-Id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "itemId": 10,
-                                  "start": "2026-09-18T10:00:00",
-                                  "end": "2026-09-19T10:00:00"
-                                }
-                                """))
+                        .content(json))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<NewBookingRequest> captor =

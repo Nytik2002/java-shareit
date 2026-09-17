@@ -67,20 +67,12 @@ public class ItemRequestDtoJsonTest {
     //Преобразование JSON в DTO
     @Test
     void shouldDeserializeItemRequestDto() throws Exception {
-        String content = """
-                {
-                  "id": 1,
-                  "description": "Нужна дрель",
-                  "created": "2026-09-16T12:30:45",
-                  "items": [
-                    {
-                      "id": 10,
-                      "name": "Дрель",
-                      "ownerId": 2
-                    }
-                  ]
-                }
-                """;
+        String content = "{\"id\":1,"
+                + "\"description\":\"Нужна дрель\","
+                + "\"created\":\"2026-09-16T12:30:45\","
+                + "\"items\":["
+                + "{\"id\":10,\"name\":\"Дрель\",\"ownerId\":2}"
+                + "]}";
 
         ItemRequestDto result = json.parseObject(content);
 

@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.request;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
