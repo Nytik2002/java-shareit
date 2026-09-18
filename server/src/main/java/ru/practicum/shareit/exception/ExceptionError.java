@@ -8,73 +8,87 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.Map;
-
 //Обработчик ошибок
 @RestControllerAdvice
 public class ExceptionError {
 
     //Обработка ошибок входных данных
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException e) {
+    public ResponseEntity<ErrorResponse> handleValidation(
+            MethodArgumentNotValidException e) {
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Validation failed"));
+                .body(new ErrorResponse("Validation failed"));
     }
 
     //Обработка отсутствия заголовка
     @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<Map<String, String>> handleMissingHeader(MissingRequestHeaderException e) {
+    public ResponseEntity<ErrorResponse> handleMissingHeader(
+            MissingRequestHeaderException e) {
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Missing required header: " + e.getHeaderName()));
+                .body(new ErrorResponse(
+                        "Missing required header: " + e.getHeaderName()
+                ));
     }
 
     //Обработка случая, когда объект не найден
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleNotFound(NotFoundException e) {
+    public ResponseEntity<ErrorResponse> handleNotFound(
+            NotFoundException e) {
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", e.getMessage()));
+                .body(new ErrorResponse(e.getMessage()));
     }
 
     //Обработка ошибок проверки данных
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<Map<String, String>> handleValidationException(ValidationException e) {
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            ValidationException e) {
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                .body(new ErrorResponse(e.getMessage()));
     }
 
     //Обработка конфликтов данных
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<Map<String, String>> handleConflict(ConflictException e) {
+    public ResponseEntity<ErrorResponse> handleConflict(
+            ConflictException e) {
+
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(Map.of("error", e.getMessage()));
+                .body(new ErrorResponse(e.getMessage()));
     }
 
     //Обработка запрещенных действий
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenException e) {
+    public ResponseEntity<ErrorResponse> handleForbidden(
+            ForbiddenException e) {
+
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", e.getMessage()));
+                .body(new ErrorResponse(e.getMessage()));
     }
 
     //Обработка неправильного значения параметра запроса
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException e) {
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Invalid request parameter"));
+                .body(new ErrorResponse("Invalid request parameter"));
     }
 
     //Обработка ошибок
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+                .body(new ErrorResponse("Internal server error"));
     }
 }

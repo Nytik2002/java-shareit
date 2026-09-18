@@ -7,8 +7,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -24,13 +22,13 @@ public class ExceptionErrorTest {
         MethodArgumentNotValidException exception =
                 mock(MethodArgumentNotValidException.class);
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleValidation(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(
                 "Validation failed",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -43,13 +41,13 @@ public class ExceptionErrorTest {
         when(exception.getHeaderName())
                 .thenReturn("X-Sharer-User-Id");
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleMissingHeader(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(
                 "Missing required header: X-Sharer-User-Id",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -59,13 +57,13 @@ public class ExceptionErrorTest {
         NotFoundException exception =
                 new NotFoundException("User not found");
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleNotFound(exception);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals(
                 "User not found",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -75,13 +73,13 @@ public class ExceptionErrorTest {
         ValidationException exception =
                 new ValidationException("Invalid data");
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleValidationException(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(
                 "Invalid data",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -91,13 +89,13 @@ public class ExceptionErrorTest {
         ConflictException exception =
                 new ConflictException("Email already exists");
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleConflict(exception);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals(
                 "Email already exists",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -107,13 +105,13 @@ public class ExceptionErrorTest {
         ForbiddenException exception =
                 new ForbiddenException("Access denied");
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleForbidden(exception);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals(
                 "Access denied",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -123,13 +121,13 @@ public class ExceptionErrorTest {
         MethodArgumentTypeMismatchException exception =
                 mock(MethodArgumentTypeMismatchException.class);
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleTypeMismatch(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(
                 "Invalid request parameter",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 
@@ -139,7 +137,7 @@ public class ExceptionErrorTest {
         Exception exception =
                 new Exception("Unexpected error");
 
-        ResponseEntity<Map<String, String>> response =
+        ResponseEntity<ErrorResponse> response =
                 exceptionError.handleException(exception);
 
         assertEquals(
@@ -149,7 +147,7 @@ public class ExceptionErrorTest {
 
         assertEquals(
                 "Internal server error",
-                response.getBody().get("error")
+                response.getBody().getError()
         );
     }
 }
