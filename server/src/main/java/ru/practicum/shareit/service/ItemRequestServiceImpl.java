@@ -30,8 +30,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     //Создание нового запроса вещи
     @Override
     public ItemRequestDto create(Long userId, ItemRequestDto requestDto) {
-        User requestor = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User requestor = getUserOrThrow(userId);
 
         ItemRequest itemRequest = ItemRequest.builder()
                 .description(requestDto.getDescription())
@@ -50,8 +49,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     //Получение запросов пользователя
     @Override
     public List<ItemRequestDto> getOwnRequests(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        getUserOrThrow(userId);
 
         List<ItemRequest> requests =
                 itemRequestRepository.findAllByRequestor_IdOrderByCreatedDesc(userId);
@@ -62,8 +60,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     //Получение запросов других пользователей
     @Override
     public List<ItemRequestDto> getAllRequests(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        getUserOrThrow(userId);
 
         List<ItemRequest> requests =
                 itemRequestRepository.findAllByRequestor_IdNotOrderByCreatedDesc(userId);
@@ -74,15 +71,25 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     //Получение одного запроса по ID
     @Override
     public ItemRequestDto getById(Long userId, Long requestId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        getUserOrThrow(userId);
 
-        ItemRequest request = itemRequestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Request not found"));
+        ItemRequest request = getRequestOrThrow(requestId);
 
         List<Item> items = itemRepository.findAllByRequest_Id(requestId);
 
         return ItemRequestMapper.toItemRequestDto(request, items);
+    }
+
+    //Получение пользователя или ошибка, если пользователь не найден
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    //Получение запроса или ошибка, если запрос не найден
+    private ItemRequest getRequestOrThrow(Long requestId) {
+        return itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Request not found"));
     }
 
     //Добавление вещей-ответов к запросам

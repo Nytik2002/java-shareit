@@ -34,35 +34,10 @@ public class BookingServiceImpl implements BookingService {
     //Создание нового бронирования
     @Override
     public BookingDto create(Long userId, NewBookingRequest bookingRequest) {
-        User booker = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User booker = getUserOrThrow(userId);
+        Item item = getItemOrThrow(bookingRequest.getItemId());
 
-        Item item = itemRepository.findById(bookingRequest.getItemId())
-                .orElseThrow(() -> new NotFoundException("Item not found"));
-
-        if (!item.getAvailable()) {
-            throw new ValidationException("Item is not available");
-        }
-
-        if (item.getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Owner cannot book own item");
-        }
-
-        if (bookingRequest.getStart() == null) {
-            throw new ValidationException("Start date is required");
-        }
-
-        if (bookingRequest.getEnd() == null) {
-            throw new ValidationException("End date is required");
-        }
-
-        if (bookingRequest.getStart().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Start date must be in the future");
-        }
-
-        if (!bookingRequest.getEnd().isAfter(bookingRequest.getStart())) {
-            throw new ValidationException("End date must be after start date");
-        }
+        validateBookingCreation(userId, item, bookingRequest);
 
         Booking booking = Booking.builder()
                 .start(bookingRequest.getStart())
@@ -80,20 +55,9 @@ public class BookingServiceImpl implements BookingService {
     //Подтверждение или отклонение бронирования
     @Override
     public BookingDto approve(Long userId, Long bookingId, Boolean approved) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Booking not found"));
+        Booking booking = getBookingOrThrow(bookingId);
 
-        if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new ForbiddenException("Only owner can approve booking");
-        }
-
-        if (approved == null) {
-            throw new ValidationException("Approved status is required");
-        }
-
-        if (booking.getStatus() != BookingStatus.WAITING) {
-            throw new ValidationException("Booking is already processed");
-        }
+        validateBookingApproval(userId, booking, approved);
 
         if (approved) {
             booking.setStatus(BookingStatus.APPROVED);
@@ -109,15 +73,9 @@ public class BookingServiceImpl implements BookingService {
     //Получение бронирования по ID
     @Override
     public BookingDto getById(Long userId, Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Booking not found"));
+        Booking booking = getBookingOrThrow(bookingId);
 
-        Long bookerId = booking.getBooker().getId();
-        Long ownerId = booking.getItem().getOwner().getId();
-
-        if (!bookerId.equals(userId) && !ownerId.equals(userId)) {
-            throw new NotFoundException("Booking not found");
-        }
+        validateBookingAccess(userId, booking);
 
         return BookingMapper.toBookingDto(booking);
     }
@@ -125,8 +83,7 @@ public class BookingServiceImpl implements BookingService {
     //Получение бронирований текущего пользователя
     @Override
     public List<BookingDto> getAllByBooker(Long userId, BookingState state) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        getUserOrThrow(userId);
 
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
@@ -163,8 +120,7 @@ public class BookingServiceImpl implements BookingService {
     //Получение бронирований вещей владельца
     @Override
     public List<BookingDto> getAllByOwner(Long userId, BookingState state) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        getUserOrThrow(userId);
 
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
@@ -196,5 +152,83 @@ public class BookingServiceImpl implements BookingService {
         return bookings.stream()
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
+    }
+
+    //Получение пользователя или ошибка, если пользователь не найден
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    //Получение вещи или ошибка, если вещь не найдена
+    private Item getItemOrThrow(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+    }
+
+    //Получение бронирования или ошибка, если бронирование не найдено
+    private Booking getBookingOrThrow(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Booking not found"));
+    }
+
+    //Проверка данных перед созданием бронирования
+    private void validateBookingCreation(
+            Long userId,
+            Item item,
+            NewBookingRequest bookingRequest) {
+
+        if (!item.getAvailable()) {
+            throw new ValidationException("Item is not available");
+        }
+
+        if (item.getOwner().getId().equals(userId)) {
+            throw new NotFoundException("Owner cannot book own item");
+        }
+
+        if (bookingRequest.getStart() == null) {
+            throw new ValidationException("Start date is required");
+        }
+
+        if (bookingRequest.getEnd() == null) {
+            throw new ValidationException("End date is required");
+        }
+
+        if (bookingRequest.getStart().isBefore(LocalDateTime.now())) {
+            throw new ValidationException("Start date must be in the future");
+        }
+
+        if (!bookingRequest.getEnd().isAfter(bookingRequest.getStart())) {
+            throw new ValidationException("End date must be after start date");
+        }
+    }
+
+    //Проверка данных перед подтверждением бронирования
+    private void validateBookingApproval(
+            Long userId,
+            Booking booking,
+            Boolean approved) {
+
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
+            throw new ForbiddenException("Only owner can approve booking");
+        }
+
+        if (approved == null) {
+            throw new ValidationException("Approved status is required");
+        }
+
+        if (booking.getStatus() != BookingStatus.WAITING) {
+            throw new ValidationException("Booking is already processed");
+        }
+    }
+
+    //Проверка доступа к бронированию
+    private void validateBookingAccess(Long userId, Booking booking) {
+        Long bookerId = booking.getBooker().getId();
+        Long ownerId = booking.getItem().getOwner().getId();
+
+        if (!bookerId.equals(userId) && !ownerId.equals(userId)) {
+            throw new NotFoundException("Booking not found");
+        }
     }
 }

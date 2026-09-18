@@ -43,18 +43,14 @@ public class ItemServiceImpl implements ItemService {
     //Создание вещи
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User owner = getUserOrThrow(userId);
 
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
-        //Если вещь создаётся в ответ на запрос
+        //Если вещь создается в ответ на запрос
         if (itemDto.getRequestId() != null) {
-            ItemRequest request = itemRequestRepository
-                    .findById(itemDto.getRequestId())
-                    .orElseThrow(() -> new NotFoundException("Request not found"));
-
+            ItemRequest request = getRequestOrThrow(itemDto.getRequestId());
             item.setRequest(request);
         }
 
@@ -66,12 +62,9 @@ public class ItemServiceImpl implements ItemService {
     //Обновление вещи
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
-        Item existingItem = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        Item existingItem = getItemOrThrow(itemId);
 
-        if (!existingItem.getOwner().getId().equals(userId)) {
-            throw new ForbiddenException("Only owner can update item");
-        }
+        validateItemOwner(userId, existingItem);
 
         if (itemDto.getName() != null) {
             existingItem.setName(itemDto.getName());
@@ -93,8 +86,7 @@ public class ItemServiceImpl implements ItemService {
     //Получение вещи по ID
     @Override
     public ItemDto getById(Long userId, Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        Item item = getItemOrThrow(itemId);
 
         ItemDto itemDto = ItemMapper.toItemDto(item);
 
@@ -144,8 +136,7 @@ public class ItemServiceImpl implements ItemService {
     //Получение всех вещей владельца
     @Override
     public List<ItemDto> getAllByOwner(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        getUserOrThrow(userId);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -164,7 +155,7 @@ public class ItemServiceImpl implements ItemService {
                         comment -> comment.getItem().getId()
                 ));
 
-        //Получаем подтверждённые бронирования сразу для всех вещей
+        //Получаем подтвержденные бронирования сразу для всех вещей
         Map<Long, List<Booking>> bookingsByItem = bookingRepository
                 .findByItemInAndStatus(
                         items,
@@ -188,7 +179,7 @@ public class ItemServiceImpl implements ItemService {
 
                     itemDto.setComments(comments);
 
-                    //Берём бронирования из Map без нового запроса в базу
+                    //Берем бронирования из Map без нового запроса в базу
                     List<Booking> itemBookings = bookingsByItem
                             .getOrDefault(item.getId(), Collections.emptyList());
 
@@ -245,24 +236,12 @@ public class ItemServiceImpl implements ItemService {
     //Добавление комментария
     @Override
     public CommentDto addComment(Long userId, Long itemId, CommentDto commentDto) {
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        User author = getUserOrThrow(userId);
+        Item item = getItemOrThrow(itemId);
 
         LocalDateTime now = LocalDateTime.now();
 
-        boolean hasCompletedBooking =
-                bookingRepository.existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
-                        userId,
-                        itemId,
-                        BookingStatus.APPROVED,
-                        now);
-
-        if (!hasCompletedBooking) {
-            throw new ValidationException("User has not completed booking");
-        }
+        validateCompletedBooking(userId, itemId, now);
 
         Comment comment = Comment.builder()
                 .text(commentDto.getText())
@@ -274,6 +253,49 @@ public class ItemServiceImpl implements ItemService {
         Comment savedComment = commentRepository.save(comment);
 
         return CommentMapper.toCommentDto(savedComment);
+    }
+
+    //Получение пользователя или ошибка, если пользователь не найден
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    //Получение вещи или ошибка, если вещь не найдена
+    private Item getItemOrThrow(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+    }
+
+    //Получение запроса или ошибка, если запрос не найден
+    private ItemRequest getRequestOrThrow(Long requestId) {
+        return itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Request not found"));
+    }
+
+    //Проверка владельца вещи перед изменением
+    private void validateItemOwner(Long userId, Item item) {
+        if (!item.getOwner().getId().equals(userId)) {
+            throw new ForbiddenException("Only owner can update item");
+        }
+    }
+
+    //Проверка завершенного бронирования перед добавлением комментария
+    private void validateCompletedBooking(
+            Long userId,
+            Long itemId,
+            LocalDateTime now) {
+
+        boolean hasCompletedBooking =
+                bookingRepository.existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
+                        userId,
+                        itemId,
+                        BookingStatus.APPROVED,
+                        now);
+
+        if (!hasCompletedBooking) {
+            throw new ValidationException("User has not completed booking");
+        }
     }
 
     //Получение комментариев вещи

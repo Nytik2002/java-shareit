@@ -22,9 +22,7 @@ public class UserServiceImpl implements UserService {
     //Создание пользователя
     @Override
     public UserDto create(UserDto userDto) {
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new ConflictException("Email already exists");
-        }
+        validateEmailAvailable(userDto.getEmail());
 
         User user = UserMapper.toUser(userDto);
         User savedUser = userRepository.save(user);
@@ -35,17 +33,10 @@ public class UserServiceImpl implements UserService {
     //Обновление пользователя
     @Override
     public UserDto update(Long id, UserDto userDto) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User existingUser = getUserOrThrow(id);
 
         if (userDto.getEmail() != null) {
-            userRepository.findByEmail(userDto.getEmail())
-                    .ifPresent(user -> {
-                        if (!user.getId().equals(id)) {
-                            throw new ConflictException("Email already exists");
-                        }
-                    });
-
+            validateEmailForUpdate(id, userDto.getEmail());
             existingUser.setEmail(userDto.getEmail());
         }
 
@@ -61,8 +52,7 @@ public class UserServiceImpl implements UserService {
     //Получение пользователя по ID
     @Override
     public UserDto getById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = getUserOrThrow(id);
 
         return UserMapper.toUserDto(user);
     }
@@ -78,10 +68,38 @@ public class UserServiceImpl implements UserService {
     //Удаление пользователя
     @Override
     public void delete(Long id) {
+        validateUserExists(id);
+
+        userRepository.deleteById(id);
+    }
+
+    //Получение пользователя или ошибка, если пользователь не найден
+    private User getUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    //Проверка доступности email при создании пользователя
+    private void validateEmailAvailable(String email) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new ConflictException("Email already exists");
+        }
+    }
+
+    //Проверка email при обновлении пользователя
+    private void validateEmailForUpdate(Long id, String email) {
+        userRepository.findByEmail(email)
+                .ifPresent(user -> {
+                    if (!user.getId().equals(id)) {
+                        throw new ConflictException("Email already exists");
+                    }
+                });
+    }
+
+    //Проверка существования пользователя перед удалением
+    private void validateUserExists(Long id) {
         if (!userRepository.existsById(id)) {
             throw new NotFoundException("User not found");
         }
-
-        userRepository.deleteById(id);
     }
 }
