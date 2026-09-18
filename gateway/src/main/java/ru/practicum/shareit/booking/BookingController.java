@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
+import ru.practicum.shareit.constants.ShareitConstants;
 
 //Контроллер для работы с бронированиями
 @Controller
@@ -32,7 +33,7 @@ public class BookingController {
     //Получение бронирований текущего пользователя
     @GetMapping
     public ResponseEntity<Object> getBookings(
-            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) long userId,
             @RequestParam(name = "state", defaultValue = "all") String stateParam,
             @PositiveOrZero
             @RequestParam(name = "from", defaultValue = "0") Integer from,
@@ -57,7 +58,7 @@ public class BookingController {
     //Создание нового бронирования
     @PostMapping
     public ResponseEntity<Object> bookItem(
-            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) long userId,
             @Valid @RequestBody BookItemRequestDto requestDto) {
 
         log.info("Creating booking {}, userId={}", requestDto, userId);
@@ -68,7 +69,7 @@ public class BookingController {
     //Получение бронирования по ID
     @GetMapping("/{bookingId}")
     public ResponseEntity<Object> getBooking(
-            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) long userId,
             @PathVariable Long bookingId) {
 
         log.info("Get booking {}, userId={}", bookingId, userId);
@@ -79,7 +80,7 @@ public class BookingController {
     //Подтверждение или отклонение бронирования
     @PatchMapping("/{bookingId}")
     public ResponseEntity<Object> approveBooking(
-            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) long userId,
             @PathVariable Long bookingId,
             @RequestParam Boolean approved) {
 
@@ -96,7 +97,7 @@ public class BookingController {
     //Получение бронирований вещей владельца
     @GetMapping("/owner")
     public ResponseEntity<Object> getOwnerBookings(
-            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) long userId,
             @RequestParam(name = "state", defaultValue = "all") String stateParam,
             @PositiveOrZero
             @RequestParam(name = "from", defaultValue = "0") Integer from,

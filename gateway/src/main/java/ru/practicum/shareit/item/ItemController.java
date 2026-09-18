@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.shareit.comment.dto.NewCommentRequest;
+import ru.practicum.shareit.constants.ShareitConstants;
 import ru.practicum.shareit.item.dto.NewItemRequest;
 import ru.practicum.shareit.item.dto.UpdateItemRequest;
 
@@ -27,7 +28,7 @@ public class ItemController {
     //Создание вещи
     @PostMapping
     public ResponseEntity<Object> create(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId,
             @Valid @RequestBody NewItemRequest itemRequest) {
 
         return itemClient.create(userId, itemRequest);
@@ -36,7 +37,7 @@ public class ItemController {
     //Обновление вещи
     @PatchMapping("/{itemId}")
     public ResponseEntity<Object> update(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId,
             @PathVariable Long itemId,
             @Valid @RequestBody UpdateItemRequest itemRequest) {
 
@@ -46,7 +47,7 @@ public class ItemController {
     //Получение вещи по ID
     @GetMapping("/{itemId}")
     public ResponseEntity<Object> getById(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId,
             @PathVariable Long itemId) {
 
         return itemClient.getById(userId, itemId);
@@ -55,7 +56,7 @@ public class ItemController {
     //Получение всех вещей владельца
     @GetMapping
     public ResponseEntity<Object> getAllByOwner(
-            @RequestHeader("X-Sharer-User-Id") Long userId) {
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId) {
 
         return itemClient.getAllByOwner(userId);
     }
@@ -69,7 +70,7 @@ public class ItemController {
     //Добавление комментария
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<Object> addComment(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId,
             @PathVariable Long itemId,
             @Valid @RequestBody NewCommentRequest commentRequest) {
 

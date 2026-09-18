@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import ru.practicum.shareit.constants.ShareitConstants;
 import ru.practicum.shareit.dto.ItemRequestDto;
 
 //Контроллер для работы с запросами вещей
@@ -23,7 +24,7 @@ public class ItemRequestController {
     //Создание нового запроса вещи
     @PostMapping
     public ResponseEntity<Object> create(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId,
             @Valid @RequestBody ItemRequestDto requestDto) {
 
         return itemRequestClient.create(userId, requestDto);
@@ -32,7 +33,7 @@ public class ItemRequestController {
     //Получение запросов пользователя
     @GetMapping
     public ResponseEntity<Object> getOwnRequests(
-            @RequestHeader("X-Sharer-User-Id") Long userId) {
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId) {
 
         return itemRequestClient.getOwnRequests(userId);
     }
@@ -40,7 +41,7 @@ public class ItemRequestController {
     //Получение запросов других пользователей
     @GetMapping("/all")
     public ResponseEntity<Object> getAllRequests(
-            @RequestHeader("X-Sharer-User-Id") Long userId) {
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId) {
 
         return itemRequestClient.getAllRequests(userId);
     }
@@ -48,7 +49,7 @@ public class ItemRequestController {
     //Получение одного запроса по ID
     @GetMapping("/{requestId}")
     public ResponseEntity<Object> getById(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(ShareitConstants.X_SHARER_USER_ID) Long userId,
             @PathVariable Long requestId) {
 
         return itemRequestClient.getById(userId, requestId);
