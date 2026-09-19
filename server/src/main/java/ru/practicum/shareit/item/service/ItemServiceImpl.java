@@ -48,7 +48,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
-        //Если вещь создается в ответ на запрос
+        //Если вещь создаётся в ответ на запрос
         if (itemDto.getRequestId() != null) {
             ItemRequest request = getRequestOrThrow(itemDto.getRequestId());
             item.setRequest(request);
@@ -155,7 +155,7 @@ public class ItemServiceImpl implements ItemService {
                         comment -> comment.getItem().getId()
                 ));
 
-        //Получаем подтвержденные бронирования сразу для всех вещей
+        //Получаем подтверждённые бронирования сразу для всех вещей
         Map<Long, List<Booking>> bookingsByItem = bookingRepository
                 .findByItemInAndStatus(
                         items,
@@ -179,7 +179,7 @@ public class ItemServiceImpl implements ItemService {
 
                     itemDto.setComments(comments);
 
-                    //Берем бронирования из Map без нового запроса в базу
+                    //Берём бронирования из Map без нового запроса в базу
                     List<Booking> itemBookings = bookingsByItem
                             .getOrDefault(item.getId(), Collections.emptyList());
 
@@ -280,18 +280,19 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    //Проверка завершенного бронирования перед добавлением комментария
+    //Проверка завершённого бронирования перед добавлением комментария
     private void validateCompletedBooking(
             Long userId,
             Long itemId,
             LocalDateTime now) {
 
         boolean hasCompletedBooking =
-                bookingRepository.existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
+                bookingRepository.existsCompletedBooking(
                         userId,
                         itemId,
                         BookingStatus.APPROVED,
-                        now);
+                        now
+                );
 
         if (!hasCompletedBooking) {
             throw new ValidationException("User has not completed booking");

@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
 
@@ -46,14 +48,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             LocalDateTime end,
             Sort sort);
 
-    List<Booking> findByItem_Owner_IdAndEndBefore(
-            Long ownerId,
-            LocalDateTime end,
-            Sort sort);
-
     List<Booking> findByItem_Owner_IdAndStartAfter(
             Long ownerId,
             LocalDateTime start,
+            Sort sort);
+
+    List<Booking> findByItem_Owner_IdAndEndBefore(
+            Long ownerId,
+            LocalDateTime end,
             Sort sort);
 
     List<Booking> findByItem_Owner_IdAndStatus(
@@ -79,10 +81,18 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             BookingStatus status,
             LocalDateTime time);
 
-    //Проверка подтвержденного бронирования пользователя
-    boolean existsByBooker_IdAndItem_IdAndStatusAndEndBefore(
-            Long bookerId,
-            Long itemId,
-            BookingStatus status,
-            LocalDateTime time);
+    //Проверка завершенного бронирования пользователя
+    @Query("""
+            select case when count(b) > 0 then true else false end
+            from Booking b
+            where b.booker.id = :bookerId
+              and b.item.id = :itemId
+              and b.status = :status
+              and b.end < :time
+            """)
+    boolean existsCompletedBooking(
+            @Param("bookerId") Long bookerId,
+            @Param("itemId") Long itemId,
+            @Param("status") BookingStatus status,
+            @Param("time") LocalDateTime time);
 }
